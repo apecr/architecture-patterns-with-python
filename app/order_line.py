@@ -1,8 +1,8 @@
 import dataclasses
 
 
-@dataclasses.dataclass(eq=False)
-class OrderLine():
+@dataclasses.dataclass(frozen=True)
+class OrderLine:
     order_reference: str
     sku: str
     quantity: int
