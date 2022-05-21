@@ -15,6 +15,17 @@ def test_prefers_current_stock_batches_to_shipments():
     assert shipment_batch.available_quantity == 100
 
 
+def test_use_batches_with_same_product():
+    in_stock_batch = Batch("in-stock-batch", "RETRO-CLOCK-2", 100, eta=None)
+    shipment_batch = Batch("shipment-batch", "RETRO-CLOCK", 100, eta=tomorrow)
+    line = OrderLine("oref", "RETRO-CLOCK", 10)
+
+    allocate(line, [in_stock_batch, shipment_batch])
+
+    assert in_stock_batch.available_quantity == 100
+    assert shipment_batch.available_quantity == 90
+
+
 def test_prefers_earlier_batches():
     earliest = Batch("speedy-batch", "MINIMALIST-SPOON", 100, eta=today)
     medium = Batch("normal-batch", "MINIMALIST-SPOON", 100, eta=tomorrow)
