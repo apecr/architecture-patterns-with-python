@@ -11,14 +11,20 @@ class Batch:
     sku: str
     original_quantity: int
     eta: datetime.date
-
     _allocated_order_lines: dict = dataclasses.field(default_factory=lambda: {})
+
+    def __eq__(self, other):
+        if not isinstance(other, Batch):
+            return False
+        return other.reference == self.reference
+
+    def __hash__(self):
+        return hash(self.reference)
 
     def allocate(self, order_line: OrderLine):
         if not self._is_order_allocated(order_line) and self._is_same_product(order_line):
             if self.original_quantity < order_line.quantity:
                 raise AllocateException()
-            # self.original_quantity -= order_line.quantity
             self._allocated_order_lines[order_line.order_reference] = order_line
 
     @property
