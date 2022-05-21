@@ -1,5 +1,7 @@
+import pytest
+
 from app.batch import Batch
-from app.model import allocate
+from app.model import allocate, OutOfStock
 from app.order_line import OrderLine
 from fixtures import tomorrow, today, later
 
@@ -31,7 +33,8 @@ def test_if_batches_no_same_product_should_do_nothing():
     shipment_batch = Batch("shipment-batch", "RETRO-CLOCK-2", 100, eta=tomorrow)
     line = OrderLine("oref", "RETRO-CLOCK", 10)
 
-    allocate(line, [in_stock_batch, shipment_batch])
+    with pytest.raises(OutOfStock, match='RETRO-CLOCK'):
+        allocate(line, [in_stock_batch, shipment_batch])
 
     assert in_stock_batch.available_quantity == 100
     assert shipment_batch.available_quantity == 100
@@ -56,3 +59,11 @@ def test_returns_allocated_batch_ref():
     line = OrderLine("oref", "HIGHBROW-POSTER", 10)
     allocation = allocate(line, [in_stock_batch, shipment_batch])
     assert allocation == in_stock_batch.reference
+
+
+def test_raises_out_of_stock_exception_if_cannot_allocate():
+    batch = Batch('batch1', 'SMALL-FORK', 10, eta=today)
+    allocate(OrderLine('order1', 'SMALL-FORK', 10), [batch])
+
+    with pytest.raises(OutOfStock, match='SMALL-FORK'):
+        allocate(OrderLine('order2', 'SMALL-FORK', 1), [batch])

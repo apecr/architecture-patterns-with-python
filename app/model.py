@@ -7,6 +7,10 @@ def allocate(order_line, batches):
 
     batch_to_allocate = _get_soonest_batch()
     if batch_to_allocate is None:
-        return None
+        raise OutOfStock(f'Out of stock for sku {order_line.sku}')
     batch_to_allocate.allocate(order_line)
     return batch_to_allocate.reference
+
+
+class OutOfStock(Exception):
+    pass
