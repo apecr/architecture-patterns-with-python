@@ -21,6 +21,13 @@ class Batch:
     def __hash__(self):
         return hash(self.reference)
 
+    def __gt__(self, other):
+        if self.eta is None:
+            return False
+        if other.eta is None:
+            return True
+        return self.eta > other.eta
+
     def allocate(self, order_line: OrderLine):
         if not self._is_order_allocated(order_line) and self._is_same_product(order_line):
             if self.original_quantity < order_line.quantity:
