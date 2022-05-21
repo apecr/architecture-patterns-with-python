@@ -1,8 +1,12 @@
 def allocate(order_line, batches):
-    def _get_soonest_batch(batch_lines):
-        return next(iter(sorted(filter(lambda batch: batch.can_allocate(order_line), batch_lines))))
+    def _get_soonest_batch():
+        filtered_batches = list(filter(lambda batch: batch.can_allocate(order_line), batches))
+        if not filtered_batches:
+            return None
+        return min(iter(sorted(filtered_batches)))
 
-    batch_to_allocate = _get_soonest_batch(batches)
+    batch_to_allocate = _get_soonest_batch()
+    if batch_to_allocate is None:
+        return None
     batch_to_allocate.allocate(order_line)
-
     return batch_to_allocate.reference
