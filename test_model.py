@@ -1,25 +1,19 @@
-from datetime import date, timedelta
-
 import pytest
 
-# from model import ...
 from app.batch import Batch, AllocateException
 from app.order_line import OrderLine
-
-today = date.today()
-tomorrow = today + timedelta(days=1)
-later = tomorrow + timedelta(days=10)
+from fixtures import today
 
 
 def make_batch_and_line(sku, batch_qty, line_qty):
     return (
-        Batch("batch-001", sku, batch_qty, eta=date.today()),
+        Batch("batch-001", sku, batch_qty, eta=today),
         OrderLine("order-123", sku, line_qty)
     )
 
 
 def test_allocating_to_a_batch_reduces_the_available_quantity():
-    batch = Batch("batch-001", "SMALL-TABLE", original_quantity=20, eta=date.today())
+    batch = Batch("batch-001", "SMALL-TABLE", original_quantity=20, eta=today)
     line = OrderLine('order-ref', "SMALL-TABLE", 2)
 
     batch.allocate(line)
@@ -28,7 +22,7 @@ def test_allocating_to_a_batch_reduces_the_available_quantity():
 
 
 def test_allocating_different_skushould_not_reduce_quantity():
-    batch = Batch("batch-001", "SMALL-TABLE", original_quantity=20, eta=date.today())
+    batch = Batch("batch-001", "SMALL-TABLE", original_quantity=20, eta=today)
     line = OrderLine('order-ref', "BIG-TABLE", 2)
 
     batch.allocate(line)
@@ -37,7 +31,7 @@ def test_allocating_different_skushould_not_reduce_quantity():
 
 
 def test_cannot_allocate_if_available_smaller_than_required():
-    batch = Batch("batch-001", "SMALL-TABLE", original_quantity=1, eta=date.today())
+    batch = Batch("batch-001", "SMALL-TABLE", original_quantity=1, eta=today)
     line = OrderLine('order-ref', "SMALL-TABLE", 2)
 
     with pytest.raises(AllocateException):

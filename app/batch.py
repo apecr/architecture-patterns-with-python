@@ -13,6 +13,21 @@ class Batch:
     eta: datetime.date
     _allocated_order_lines: dict = dataclasses.field(default_factory=lambda: {})
 
+    def __eq__(self, other):
+        if not isinstance(other, Batch):
+            return False
+        return other.reference == self.reference
+
+    def __hash__(self):
+        return hash(self.reference)
+
+    def __gt__(self, other):
+        if self.eta is None:
+            return False
+        if other.eta is None:
+            return True
+        return self.eta > other.eta
+
     def allocate(self, order_line: OrderLine):
         if not self._is_order_allocated(order_line) and self._is_same_product(order_line):
             if self.original_quantity < order_line.quantity:
