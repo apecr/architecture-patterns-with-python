@@ -1,21 +1,46 @@
-from sqlalchemy import Column, ForeignKey, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, Table, MetaData, ForeignKey, Date
+from sqlalchemy.orm import mapper, relationship
 
-Base = declarative_base()
+from app.batch import Batch
+from app.order_line import OrderLine
+
+metadata = MetaData()
+
+order_lines = Table(
+    'order_lines', metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('sku', String(255)),
+    Column('quantity', Integer, nullable=False),
+    Column('order_reference', String(255)),
+)
+#
+# batches = Table(
+#     "batches",
+#     metadata,
+#     Column("id", Integer, primary_key=True, autoincrement=True),
+#     Column("reference", String(255)),
+#     Column("sku", String(255)),
+#     Column("_purchased_quantity", Integer, nullable=False),
+#     Column("eta", Date, nullable=True),
+# )
+#
+# allocations = Table(
+#     "allocations",
+#     metadata,
+#     Column("id", Integer, primary_key=True, autoincrement=True),
+#     Column("orderline_id", ForeignKey("order_lines.id")),
+#     Column("batch_id", ForeignKey("batches.id")),
+# )
 
 
-class Order(Base):
-    id = Column(Integer, primary_key=True)
-
-
-class OrderLine(Base):
-    id = Column(Integer, primary_key=True)
-    sku = Column(String(250))
-    qty = Integer(String(250))
-    order_id = Column(Integer, ForeignKey('order.id'))
-    order = relationship(Order)
-
-
-class Allocation(Base):
-    ...
+def start_mappers():
+    lines_mapper = mapper(OrderLine, order_lines)
+    # mapper(
+    #     Batch,
+    #     batches,
+    #     properties={
+    #         "_allocations": relationship(
+    #             lines_mapper, secondary=allocations, collection_class=set,
+    #         )
+    #     },
+    # )
