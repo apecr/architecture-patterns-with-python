@@ -5,15 +5,15 @@ def test_orderline_mapper_can_load_lines(session):
     session.execute(
         'INSERT INTO order_lines (order_reference, sku, quantity) VALUES '
         '("order1", "RED-CHAIR", 12),'
-        '("order2", "RED-TABLE", 13),'
-        '("order3", "BLUE-LIPSTICK", 14)'
+        '("order1", "RED-TABLE", 13),'
+        '("order2", "BLUE-LIPSTICK", 14)'
     )
-    # expected = [
-    #     OrderLine("order1", "RED-CHAIR", 12),
-    #     OrderLine("order1", "RED-TABLE", 13),
-    #     OrderLine("order2", "BLUE-LIPSTICK", 14),
-    # ]
-    print(session.query(OrderLine).all())
+    expected = [
+        OrderLine("order1", "RED-CHAIR", 12),
+        OrderLine("order1", "RED-TABLE", 13),
+        OrderLine("order2", "BLUE-LIPSTICK", 14),
+    ]
+    assert session.query(OrderLine).all() == expected
 
 
 def test_orderline_mapper_can_save_lines(session):
