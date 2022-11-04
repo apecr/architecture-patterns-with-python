@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import date
 from typing import Optional, List, Set
@@ -68,3 +69,17 @@ class Batch:
 
     def can_allocate(self, line: OrderLine) -> bool:
         return self.sku == line.sku and self.available_quantity >= line.qty
+
+
+@dataclass
+class Product:
+    sku: str
+    batches: List[Batch]
+
+    def allocate(self, line: OrderLine) -> str:
+        try:
+            batch = next(b for b in sorted(self.batches) if b.can_allocate(line))
+            batch.allocate(line)
+            return batch.reference
+        except StopIteration:
+            raise OutOfStock(f"Out of stock for sku {line.sku}")
