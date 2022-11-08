@@ -20,7 +20,8 @@ def allocate(line: OrderLine, batches: List[Batch]) -> str:
 class Product:
     """ dummy implementation, fixme"""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, sku, *args, **kwargs):
+        self.sku = sku
         self.batches = kwargs.get("batches")
 
     def allocate(self, line):
