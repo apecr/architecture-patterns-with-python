@@ -76,6 +76,9 @@ class Product:
     sku: str
     batches: List[Batch]
 
+    def __hash__(self):
+        return hash(self.sku)
+
     def allocate(self, line: OrderLine) -> str:
         try:
             batch = next(b for b in sorted(self.batches) if b.can_allocate(line))

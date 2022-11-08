@@ -1,8 +1,7 @@
 from sqlalchemy import Table, MetaData, Column, Integer, String, Date, ForeignKey
-from sqlalchemy.orm import mapper, relationship
+from sqlalchemy.orm import relationship, mapper
 
 from allocation.domain import model
-
 
 metadata = MetaData()
 
@@ -20,9 +19,16 @@ batches = Table(
     metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
     Column("reference", String(255)),
-    Column("sku", String(255)),
+    Column("sku", ForeignKey("products.sku")),
     Column("_purchased_quantity", Integer, nullable=False),
     Column("eta", Date, nullable=True),
+)
+
+products = Table(
+    "products",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("sku", String(255)),
 )
 
 allocations = Table(
@@ -36,7 +42,7 @@ allocations = Table(
 
 def start_mappers():
     lines_mapper = mapper(model.OrderLine, order_lines)
-    mapper(
+    batch_mapper = mapper(
         model.Batch,
         batches,
         properties={
@@ -44,6 +50,15 @@ def start_mappers():
                 lines_mapper,
                 secondary=allocations,
                 collection_class=set,
+            )
+        },
+    )
+    mapper(
+        model.Product,
+        products,
+        properties={
+            "batches": relationship(
+                batch_mapper
             )
         },
     )

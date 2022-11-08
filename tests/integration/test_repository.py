@@ -1,13 +1,14 @@
 # pylint: disable=protected-access
-from allocation.domain import model
 from allocation.adapters import repository
+from allocation.domain import model
 
 
 def test_repository_can_save_a_batch(session):
     batch = model.Batch("batch1", "RUSTY-SOAPDISH", 100, eta=None)
+    product = model.Product(sku=batch.sku, batches=[batch])
 
-    repo = repository.SqlAlchemyRepository(session)
-    repo.add(batch)
+    repo = repository.SqlAlchemyProductRepository(session)
+    repo.add(product)
     session.commit()
 
     rows = session.execute(
@@ -41,6 +42,19 @@ def insert_batch(session, batch_id):
     return batch_id
 
 
+def insert_product(session, product_id):
+    session.execute(
+        "INSERT INTO products (sku)"
+        ' VALUES (:product_id)',
+        dict(product_id=product_id),
+    )
+    [[product_id]] = session.execute(
+        'SELECT id FROM products WHERE sku=:product_id',
+        dict(product_id=product_id),
+    )
+    return product_id
+
+
 def insert_allocation(session, orderline_id, batch_id):
     session.execute(
         "INSERT INTO allocations (orderline_id, batch_id)"
@@ -49,19 +63,25 @@ def insert_allocation(session, orderline_id, batch_id):
     )
 
 
+SKU = "GENERIC-SOFA"
+
+
 def test_repository_can_retrieve_a_batch_with_allocations(session):
     orderline_id = insert_order_line(session)
     batch1_id = insert_batch(session, "batch1")
-    insert_batch(session, "batch2")
+    batch2_id = insert_batch(session, "batch2")
     insert_allocation(session, orderline_id, batch1_id)
+    insert_product(session, SKU)
 
-    repo = repository.SqlAlchemyRepository(session)
-    retrieved = repo.get("batch1")
+    repo = repository.SqlAlchemyProductRepository(session)
+    retrieved_product = repo.get(SKU)
 
-    expected = model.Batch("batch1", "GENERIC-SOFA", 100, eta=None)
-    assert retrieved == expected  # Batch.__eq__ only compares reference
-    assert retrieved.sku == expected.sku
-    assert retrieved._purchased_quantity == expected._purchased_quantity
-    assert retrieved._allocations == {
-        model.OrderLine("order1", "GENERIC-SOFA", 12),
-    }
+    print(retrieved_product)
+    batches = [model.Batch(batch1_id, SKU, 100, None), model.Batch(batch2_id, SKU, 100, None)]
+    print(batches)
+
+    expected = model.Product(sku=SKU, batches=batches)
+    print(expected)
+    # assert retrieved_product == expected
+    assert retrieved_product.sku == expected.sku
+    assert len(retrieved_product.batches) == 2
