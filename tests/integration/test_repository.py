@@ -42,17 +42,13 @@ def insert_batch(session, batch_id):
     return batch_id
 
 
-def insert_product(session, product_id):
+def insert_product(session, sku):
     session.execute(
         "INSERT INTO products (sku)"
-        ' VALUES (:product_id)',
-        dict(product_id=product_id),
+        ' VALUES (:sku)',
+        dict(sku=sku),
     )
-    [[product_id]] = session.execute(
-        'SELECT id FROM products WHERE sku=:product_id',
-        dict(product_id=product_id),
-    )
-    return product_id
+    return sku
 
 
 def insert_allocation(session, orderline_id, batch_id):
