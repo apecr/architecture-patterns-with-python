@@ -38,7 +38,9 @@ def test_returns_allocated_batch_ref():
     shipment_batch = Batch("shipment-batch-ref", "HIGHBROW-POSTER", 100, eta=tomorrow)
     line = OrderLine("oref", "HIGHBROW-POSTER", 10)
     product = Product(sku="HIGHBROW-POSTER", batches=[in_stock_batch, shipment_batch])
+
     allocation = product.allocate(line)
+
     assert allocation == in_stock_batch.reference
 
 
@@ -51,7 +53,6 @@ def test_raises_out_of_stock_exception_if_cannot_allocate():
         product.allocate(OrderLine("order2", "SMALL-FORK", 1))
 
 
-@pytest.mark.skip
 def test_increments_version_number():
     line = OrderLine("oref", "SCANDI-PEN", 10)
     product = Product(
