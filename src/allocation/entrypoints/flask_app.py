@@ -1,10 +1,9 @@
 from datetime import datetime
-from flask import Flask, request
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
-from allocation.domain import model
+from flask import Flask, request
+
 from allocation.adapters import orm
+from allocation.domain import model
 from allocation.service_layer import services, unit_of_work
 
 app = Flask(__name__)
@@ -28,6 +27,11 @@ def add_batch():
 
 @app.route("/allocate", methods=["POST"])
 def allocate_endpoint():
+    line = model.OrderLine(
+        request.json["orderid"],
+        request.json["sku"],
+        request.json["qty"],
+    )
     try:
         batchref = services.allocate(
             request.json["orderid"],
@@ -36,6 +40,7 @@ def allocate_endpoint():
             unit_of_work.SqlAlchemyUnitOfWork(),
         )
     except (model.OutOfStock, services.InvalidSku) as e:
+        send_email("out of stock", "stock_admin@made.com", f"{line.orderid} - {line.sku}")
         return {"message": str(e)}, 400
 
     return {"batchref": batchref}, 201
