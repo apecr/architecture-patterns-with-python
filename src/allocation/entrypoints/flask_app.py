@@ -3,6 +3,7 @@ from datetime import datetime
 from flask import Flask, request
 
 from allocation.adapters import orm
+from allocation.adapters.email import send_email
 from allocation.domain import model
 from allocation.service_layer import services, unit_of_work
 
