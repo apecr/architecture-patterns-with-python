@@ -1,9 +1,8 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import date
 from typing import Optional, List, Set
-
-from allocation.adapters.email import send_email
 
 
 class OutOfStock(Exception):
@@ -23,7 +22,6 @@ class Product:
             self.version_number += 1
             return batch.reference
         except StopIteration:
-            send_email("out of stock", "stock_admin@made.com", f"{line.orderid} - {line.sku}")
             raise OutOfStock(f"Out of stock for sku {line.sku}")
 
 

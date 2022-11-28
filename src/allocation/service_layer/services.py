@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Optional
 from datetime import date
 
+from allocation.adapters.email import send_email
 from allocation.domain import model
 from allocation.domain.model import OrderLine
 from allocation.service_layer import unit_of_work
@@ -33,6 +34,10 @@ def allocate(
         product = uow.products.get(sku=line.sku)
         if product is None:
             raise InvalidSku(f"Invalid sku {line.sku}")
-        batchref = product.allocate(line)
-        uow.commit()
-    return batchref
+        try:
+            batchref = product.allocate(line)
+            uow.commit()
+            return batchref
+        except model.OutOfStock:
+            send_email("out of stock", "stock_admin@made.com", f"{line.orderid} - {line.sku}")
+            raise

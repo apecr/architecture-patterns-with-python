@@ -27,11 +27,6 @@ def add_batch():
 
 @app.route("/allocate", methods=["POST"])
 def allocate_endpoint():
-    line = model.OrderLine(
-        request.json["orderid"],
-        request.json["sku"],
-        request.json["qty"],
-    )
     try:
         batchref = services.allocate(
             request.json["orderid"],
