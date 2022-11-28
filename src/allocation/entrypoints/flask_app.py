@@ -3,7 +3,6 @@ from datetime import datetime
 from flask import Flask, request
 
 from allocation.adapters import orm
-from allocation.adapters.email import send_email
 from allocation.domain import model
 from allocation.service_layer import services, unit_of_work
 
@@ -41,7 +40,6 @@ def allocate_endpoint():
             unit_of_work.SqlAlchemyUnitOfWork(),
         )
     except (model.OutOfStock, services.InvalidSku) as e:
-        send_email("out of stock", "stock_admin@made.com", f"{line.orderid} - {line.sku}")
         return {"message": str(e)}, 400
 
     return {"batchref": batchref}, 201
