@@ -11,7 +11,7 @@ from ..random_refs import random_sku, random_batchref, random_orderid
 
 def insert_batch(session, ref, sku, qty, eta, product_version=1):
     session.execute(
-        'INSERT INTO products (sku) VALUES (:sku)',
+        'INSERT INTO products (sku, version_number) VALUES (:sku, 0)',
         dict(sku=sku)
     )
     session.execute(
