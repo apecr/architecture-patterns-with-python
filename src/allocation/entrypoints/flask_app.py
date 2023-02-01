@@ -36,5 +36,7 @@ def allocate_endpoint():
         )
     except (model.OutOfStock, services.InvalidSku) as e:
         return {"message": str(e)}, 400
+    except Exception as oe:
+        return {"message": str(oe)}, 500
 
     return {"batchref": batchref}, 201
