@@ -54,8 +54,5 @@ def test_can_not_allocate_not_enough_quantity():
 
     r = requests.post(f"{url}/allocate", json=data)
 
-    print(r)
-    print(r.json())
-
     assert r.json()["message"] == f"Out of stock {sku}"
     assert r.status_code == 400
