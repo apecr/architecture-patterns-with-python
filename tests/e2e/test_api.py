@@ -57,5 +57,5 @@ def test_can_not_allocate_not_enough_quantity():
     print(r)
     print(r.json())
 
-    assert r.json()["message"] == f"Invalid sku {sku}"
+    assert r.json()["message"] == f"Out of stock {sku}"
     assert r.status_code == 400

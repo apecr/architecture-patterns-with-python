@@ -28,7 +28,7 @@ def add_batch():
 @app.route("/allocate", methods=["POST"])
 def allocate_endpoint():
     try:
-        batchref = services.allocate(
+        batch_ref = services.allocate(
             request.json["orderid"],
             request.json["sku"],
             request.json["qty"],
@@ -39,4 +39,7 @@ def allocate_endpoint():
     except Exception as oe:
         return {"message": str(oe)}, 500
 
-    return {"batchref": batchref}, 201
+    if batch_ref:
+        return {"batchref": batch_ref}, 201
+    else:
+        return {"message": f"Out of stock {request.json['sku']}"}, 400
