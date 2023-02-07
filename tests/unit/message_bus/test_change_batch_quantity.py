@@ -1,7 +1,7 @@
 from datetime import date
 
 from allocation.domain.events import BatchCreated, BatchQuantityChanged, AllocationRequired
-from tests.unit.message_bus import FakeUnitOfWork, FakeUnitOfWorkWithFakeMessageBus, FakeMessageBus
+from tests.unit.message_bus import FakeUnitOfWork, FakeMessageBus
 
 
 def test_changes_available_quantity(message_bus):
@@ -37,7 +37,7 @@ def test_reallocates_if_necessary(message_bus):
 
 def test_reallocates_if_necessary_isolated(message_bus):
     fake_message_bus = FakeMessageBus()
-    uow = FakeUnitOfWorkWithFakeMessageBus()
+    uow = FakeUnitOfWork()
 
     event_history = [
         BatchCreated("batch1", "INDIFFERENT-TABLE", 50, None),
@@ -55,7 +55,7 @@ def test_reallocates_if_necessary_isolated(message_bus):
 
     fake_message_bus.handle(BatchQuantityChanged("batch1", 25), uow)
 
-    [reallocation_event] = uow.events_published
+    [reallocation_event] = fake_message_bus.events_published
     assert isinstance(reallocation_event, AllocationRequired)
     assert reallocation_event.orderid in {"order1", "order2"}
     assert reallocation_event.sku == "INDIFFERENT-TABLE"

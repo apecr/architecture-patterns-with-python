@@ -37,17 +37,6 @@ class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
         pass
 
 
-class FakeUnitOfWorkWithFakeMessageBus(FakeUnitOfWork):
-    def __init__(self):
-        super().__init__()
-        self.events_published = []
-
-    def collect_new_events(self):
-        for product in self.products.seen:
-            while product.events:
-                self.events_published.append(product.events.pop(0))
-
-
 class FakeMessageBus(AbstractMessageBus):
     def __init__(self):
         self.events_published = []
