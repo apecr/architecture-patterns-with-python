@@ -1,9 +1,7 @@
 from datetime import date, timedelta
 
-import pytest
-
 from allocation.domain import events
-from allocation.domain.model import Product, OrderLine, Batch, OutOfStock
+from allocation.domain.model import Product, OrderLine, Batch
 
 today = date.today()
 tomorrow = today + timedelta(days=1)
@@ -45,14 +43,14 @@ def test_returns_allocated_batch_ref():
     assert allocation == in_stock_batch.reference
 
 
-@pytest.mark.skip("Changed the API, now raise an event")
-def test_raises_out_of_stock_exception_if_cannot_allocate():
+def test_raises_event_out_of_stock_if_cannot_allocate():
     batch = Batch("batch1", "SMALL-FORK", 10, eta=today)
     product = Product(sku="SMALL-FORK", batches=[batch])
     product.allocate(OrderLine("order1", "SMALL-FORK", 10))
 
-    with pytest.raises(OutOfStock, match="SMALL-FORK"):
-        product.allocate(OrderLine("order2", "SMALL-FORK", 1))
+    product.allocate(OrderLine("order2", "SMALL-FORK", 1))
+
+    assert product.events[0] == events.OutOfStock(sku="SMALL-FORK")
 
 
 def test_increments_version_number():
@@ -71,5 +69,26 @@ def test_records_out_of_stock_event_if_cannot_allocate():
     product.allocate(OrderLine("order1", "SMALL-FORK", 10))
 
     allocation = product.allocate(OrderLine("order2", "SMALL-FORK", 1))
-    assert product.events[-1] == events.OutOfStock(sku="SMALL-FORK")  # (1)
+    assert product.events[-1] == events.OutOfStock(sku="SMALL-FORK")
     assert allocation is None
+
+
+def test_product_can_change_batch_quantity():
+    batch = Batch("batch1", "SMALL-FORK", 10, eta=today)
+    product = Product(sku="SMALL-FORK", batches=[batch])
+    product.allocate(OrderLine("order1", "SMALL-FORK", 6))
+
+    product.change_batch_quantity(ref="batch1", qty=8)
+
+    assert batch.available_quantity == 2
+
+
+def test_product_can_change_batch_quantity_and_deallocate_if_not_enough():
+    batch = Batch("batch1", "SMALL-FORK", 10, eta=today)
+    product = Product(sku="SMALL-FORK", batches=[batch])
+    product.allocate(OrderLine("order1", "SMALL-FORK", 6))
+
+    product.change_batch_quantity(ref="batch1", qty=4)
+
+    assert batch.available_quantity == 4
+    assert product.events[-1] == events.AllocationRequired("order1", "SMALL-FORK", 6)

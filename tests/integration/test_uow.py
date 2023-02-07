@@ -3,7 +3,9 @@ import threading
 import time
 import traceback
 from typing import List
+
 import pytest
+
 from allocation.domain import model
 from allocation.service_layer import unit_of_work
 from ..random_refs import random_sku, random_batchref, random_orderid
@@ -123,3 +125,17 @@ def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory)
     assert orders.rowcount == 1
     with unit_of_work.SqlAlchemyUnitOfWork() as uow:
         uow.session.execute("select 1")
+
+
+def test_uow_has_get_by_batch_ref(session_factory):
+    session = session_factory()
+    insert_batch(session, "batch1", "HIPSTER-WORKBENCH", 100, None)
+    session.commit()
+
+    uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory)
+    with uow:
+        product = uow.products.get_by_batch_ref(batch_ref="batch1")
+        assert len(product.batches) == 1
+        assert product.batches[0] == model.Batch("batch1", "HIPSTER-WORKBENCH", 100, None)
+
+

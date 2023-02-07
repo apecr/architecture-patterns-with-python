@@ -40,3 +40,13 @@ def send_out_of_stock_notification(
 ):
     email.send_email("stock@made.com",
                      f"Out of stock for {event.sku}")
+
+
+def change_batch_quantity(
+        event: events.BatchQuantityChanged,
+        uow: unit_of_work.AbstractUnitOfWork
+):
+    with uow:
+        product = uow.products.get_by_batch_ref(batch_ref=event.ref)
+        product.change_batch_quantity(ref=event.ref, qty=event.qty)
+        uow.commit()
