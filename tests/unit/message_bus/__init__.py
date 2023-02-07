@@ -1,5 +1,4 @@
 from allocation.adapters import repository
-from allocation.domain.model import Product
 from allocation.service_layer import unit_of_work
 
 
@@ -32,3 +31,14 @@ class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
 
     def rollback(self):
         pass
+
+
+class FakeUnitOfWorkWithFakeMessageBus(FakeUnitOfWork):
+    def __init__(self):
+        super().__init__()
+        self.events_published = []
+
+    def collect_new_events(self):
+        for product in self.products.seen:
+            while product.events:
+                self.events_published.append(product.events.pop(0))

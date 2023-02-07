@@ -10,7 +10,9 @@ def handle(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
         event = queue.pop(0)
         for handler in HANDLERS[type(event)]:
             results.append(handler(event, uow=uow))
-            queue.extend(uow.collect_new_events())
+            new_events = uow.collect_new_events()
+            if new_events:
+                queue.extend(new_events)
     return results
 
 
