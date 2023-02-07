@@ -4,7 +4,7 @@ from flask import Flask, request
 
 from allocation.adapters import orm
 from allocation.domain.events import BatchCreated, AllocationRequired
-from allocation.service_layer import handlers, unit_of_work
+from allocation.service_layer import handlers, unit_of_work, message_bus
 
 app = Flask(__name__)
 orm.start_mappers()
@@ -15,7 +15,7 @@ def add_batch():
     eta = request.json["eta"]
     if eta is not None:
         eta = datetime.fromisoformat(eta).date()
-    handlers.add_batch(BatchCreated(request.json["ref"],
+    message_bus.handle(BatchCreated(request.json["ref"],
                                     request.json["sku"],
                                     request.json["qty"],
                                     eta),
@@ -27,10 +27,10 @@ def add_batch():
 @app.route("/allocate", methods=["POST"])
 def allocate_endpoint():
     try:
-        batch_ref = handlers.allocate(
+        batch_ref = message_bus.handle(
             AllocationRequired(request.json["orderid"], request.json["sku"], request.json["qty"]),
             unit_of_work.SqlAlchemyUnitOfWork(),
-        )
+        ).pop(0)
     except handlers.InvalidSku as e:
         return {"message": str(e)}, 400
     except Exception as oe:
