@@ -46,8 +46,8 @@ def test_add_batch_for_existing_product():
 def test_allocate_returns_allocation():
     uow = FakeUnitOfWork()
     message_bus.handle(BatchCreated("batch1", "COMPLICATED-LAMP", 100, None), uow)
-    result = handlers.allocate(AllocationRequired("o1", "COMPLICATED-LAMP", 10), uow)
-    assert result == "batch1"
+    result = message_bus.handle(AllocationRequired("o1", "COMPLICATED-LAMP", 10), uow)
+    assert result[0] == "batch1"
 
 
 def test_allocate_errors_for_invalid_sku():
@@ -55,7 +55,7 @@ def test_allocate_errors_for_invalid_sku():
     message_bus.handle(BatchCreated("b1", "AREALSKU", 100, None), uow)
 
     with pytest.raises(handlers.InvalidSku, match="Invalid sku NONEXISTENTSKU"):
-        handlers.allocate(AllocationRequired("o1", "NONEXISTENTSKU", 10), uow)
+        message_bus.handle(AllocationRequired("o1", "NONEXISTENTSKU", 10), uow)
 
 
 def test_allocate_commits():

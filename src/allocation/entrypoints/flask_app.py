@@ -3,7 +3,6 @@ from datetime import datetime
 from flask import Flask, request
 
 from allocation.adapters import orm
-from allocation.domain import model
 from allocation.domain.events import BatchCreated, AllocationRequired
 from allocation.service_layer import handlers, unit_of_work
 
@@ -31,8 +30,8 @@ def allocate_endpoint():
         batch_ref = handlers.allocate(
             AllocationRequired(request.json["orderid"], request.json["sku"], request.json["qty"]),
             unit_of_work.SqlAlchemyUnitOfWork(),
-            )
-    except (model.OutOfStock, handlers.InvalidSku) as e:
+        )
+    except handlers.InvalidSku as e:
         return {"message": str(e)}, 400
     except Exception as oe:
         return {"message": str(oe)}, 500
