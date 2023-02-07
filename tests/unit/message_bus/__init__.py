@@ -1,5 +1,9 @@
 from allocation.adapters import repository
+from allocation.domain import events
+from allocation.domain.events import OutOfStock
 from allocation.service_layer import unit_of_work
+from allocation.service_layer.handlers import allocate, change_batch_quantity, add_batch
+from allocation.service_layer.message_bus import AbstractMessageBus
 
 
 class FakeRepository(repository.AbstractRepository):
@@ -42,3 +46,21 @@ class FakeUnitOfWorkWithFakeMessageBus(FakeUnitOfWork):
         for product in self.products.seen:
             while product.events:
                 self.events_published.append(product.events.pop(0))
+
+
+class FakeMessageBus(AbstractMessageBus):
+    def __init__(self):
+        self.events_published = []
+        self.HANDLERS = {
+            OutOfStock: [lambda e: None],
+            events.BatchCreated: [add_batch],
+            events.AllocationRequired: [allocate],
+            events.BatchQuantityChanged: [change_batch_quantity]
+        }
+
+    def handle(self, event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
+        for handler in self.HANDLERS[type(event)]:
+            handler(event, uow=uow)
+            new_events = uow.collect_new_events()
+            if new_events:
+                self.events_published.extend(new_events)

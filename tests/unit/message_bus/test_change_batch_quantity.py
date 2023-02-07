@@ -1,11 +1,10 @@
 from datetime import date
 
 from allocation.domain.events import BatchCreated, BatchQuantityChanged, AllocationRequired
-from allocation.service_layer import message_bus
-from tests.unit.message_bus import FakeUnitOfWork, FakeUnitOfWorkWithFakeMessageBus
+from tests.unit.message_bus import FakeUnitOfWork, FakeUnitOfWorkWithFakeMessageBus, FakeMessageBus
 
 
-def test_changes_available_quantity():
+def test_changes_available_quantity(message_bus):
     uow = FakeUnitOfWork()
     message_bus.handle(BatchCreated("batch1", "ADORABLE-SETTEE", 100, None), uow)
 
@@ -15,7 +14,7 @@ def test_changes_available_quantity():
     assert batch.available_quantity == 50
 
 
-def test_reallocates_if_necessary():
+def test_reallocates_if_necessary(message_bus):
     uow = FakeUnitOfWork()
     event_history = [
         BatchCreated("batch1", "INDIFFERENT-TABLE", 50, None),
@@ -36,7 +35,8 @@ def test_reallocates_if_necessary():
     assert batch2.available_quantity == 30
 
 
-def test_reallocates_if_necessary_isolated():
+def test_reallocates_if_necessary_isolated(message_bus):
+    fake_message_bus = FakeMessageBus()
     uow = FakeUnitOfWorkWithFakeMessageBus()
 
     event_history = [
@@ -47,13 +47,13 @@ def test_reallocates_if_necessary_isolated():
     ]
 
     for e in event_history:
-        message_bus.handle(e, uow)
+        fake_message_bus.handle(e, uow)
 
     [batch1, batch2] = uow.products.get(sku="INDIFFERENT-TABLE").batches
     assert batch1.available_quantity == 10
     assert batch2.available_quantity == 50
 
-    message_bus.handle(BatchQuantityChanged("batch1", 25), uow)
+    fake_message_bus.handle(BatchQuantityChanged("batch1", 25), uow)
 
     [reallocation_event] = uow.events_published
     assert isinstance(reallocation_event, AllocationRequired)
