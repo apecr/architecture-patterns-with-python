@@ -1,6 +1,8 @@
 import logging
 from typing import List, Callable, Dict, Type, Union, Any
 
+from tenacity import Retrying, RetryError, stop_after_attempt, wait_exponential
+
 from allocation.domain.commands import Command, Allocate, ChangeBatchQuantity, CreateBatch
 from allocation.domain.events import Event, OutOfStock
 from allocation.service_layer import unit_of_work
@@ -59,11 +61,16 @@ class MessageBus(AbstractMessageBus):
     def handle_event(self, event: Event, queue: List[Message], uow: unit_of_work.AbstractUnitOfWork):
         for handler in self.EVENT_HANDLERS[type(event)]:
             try:
-                logger.debug("handling event %s with handler %s", event, handler)
-                handler(event, uow=uow)
-                queue.extend(uow.collect_new_events())
-            except Exception:
-                logger.exception("Exception handling event %s", event)
+                for attempt in Retrying(
+                        stop=stop_after_attempt(3),
+                        wait=wait_exponential()
+                ):
+                    with attempt:
+                        logger.debug("handling event %s with handler %s", event, handler)
+                        handler(event, uow=uow)
+                        queue.extend(uow.collect_new_events())
+            except RetryError as retry_failure:
+                logger.error("Failed to handle event %s times, giving up!", retry_failure.last_attempt.attempt_number)
                 continue
 
     def handle_command(self, command: Command, queue: List[Message],
