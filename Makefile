@@ -16,6 +16,11 @@ down:
 test: up
 	docker-compose run --rm --no-deps --entrypoint=pytest app /tests/unit /tests/integration /tests/e2e
 
+
+coverage: up
+	coverage run --omit=tests --source=src -m pytest && coverage report && coverage html
+
+
 unit-tests:
 	docker-compose run --rm --no-deps --entrypoint=pytest app /tests/unit
 
