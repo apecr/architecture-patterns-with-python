@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from allocation.adapters import email
 from allocation.domain import model, events
+from allocation.domain.commands import Allocate, CreateBatch, ChangeBatchQuantity
 from allocation.domain.model import OrderLine
 from allocation.service_layer import unit_of_work
 
@@ -10,21 +11,21 @@ class InvalidSku(Exception):
     pass
 
 
-def add_batch(event: events.BatchCreated, uow: unit_of_work.AbstractUnitOfWork):
+def add_batch(command: CreateBatch, uow: unit_of_work.AbstractUnitOfWork):
     with uow:
-        product = uow.products.get(sku=event.sku)
+        product = uow.products.get(sku=command.sku)
         if product is None:
-            product = model.Product(event.sku, batches=[])
+            product = model.Product(command.sku, batches=[])
             uow.products.add(product)
-        product.batches.append(model.Batch(event.ref, event.sku, event.qty, event.eta))
+        product.batches.append(model.Batch(command.ref, command.sku, command.qty, command.eta))
         uow.commit()
 
 
 def allocate(
-        event: events.AllocationRequired,
+        command: Allocate,
         uow: unit_of_work.AbstractUnitOfWork,
 ) -> str:
-    line = OrderLine(event.orderid, event.sku, event.qty)
+    line = OrderLine(command.orderid, command.sku, command.qty)
     with uow:
         product = uow.products.get(sku=line.sku)
         if product is None:
@@ -43,10 +44,10 @@ def send_out_of_stock_notification(
 
 
 def change_batch_quantity(
-        event: events.BatchQuantityChanged,
+        command: ChangeBatchQuantity,
         uow: unit_of_work.AbstractUnitOfWork
 ):
     with uow:
-        product = uow.products.get_by_batch_ref(batch_ref=event.ref)
-        product.change_batch_quantity(ref=event.ref, qty=event.qty)
+        product = uow.products.get_by_batch_ref(batch_ref=command.ref)
+        product.change_batch_quantity(ref=command.ref, qty=command.qty)
         uow.commit()
