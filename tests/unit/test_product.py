@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
 from allocation.domain import events
+from allocation.domain.commands import Allocate
 from allocation.domain.model import Product, OrderLine, Batch
 
 today = date.today()
@@ -91,4 +92,4 @@ def test_product_can_change_batch_quantity_and_deallocate_if_not_enough():
     product.change_batch_quantity(ref="batch1", qty=4)
 
     assert batch.available_quantity == 4
-    assert product.events[-1] == events.AllocationRequired("order1", "SMALL-FORK", 6)
+    assert product.events[-1] == Allocate("order1", "SMALL-FORK", 6)

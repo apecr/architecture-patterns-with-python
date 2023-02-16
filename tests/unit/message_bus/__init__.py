@@ -1,9 +1,10 @@
 from allocation.adapters import repository
 from allocation.domain import events
+from allocation.domain.commands import CreateBatch, Allocate, ChangeBatchQuantity
 from allocation.domain.events import OutOfStock
 from allocation.service_layer import unit_of_work
 from allocation.service_layer.handlers import allocate, change_batch_quantity, add_batch
-from allocation.service_layer.message_bus import AbstractMessageBus
+from allocation.service_layer.message_bus import AbstractMessageBus, Message
 
 
 class FakeRepository(repository.AbstractRepository):
@@ -40,16 +41,17 @@ class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
 class FakeMessageBus(AbstractMessageBus):
     def __init__(self):
         self.events_published = []
-        self.HANDLERS = {
+        self.EVENT_HANDLERS = {
             OutOfStock: [lambda e: None],
-            events.BatchCreated: [add_batch],
-            events.AllocationRequired: [allocate],
-            events.BatchQuantityChanged: [change_batch_quantity]
+        }
+        self.COMMAND_HANDLERS = {
+            CreateBatch: add_batch,
+            Allocate: allocate,
+            ChangeBatchQuantity: change_batch_quantity
         }
 
-    def handle(self, event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
-        for handler in self.HANDLERS[type(event)]:
-            handler(event, uow=uow)
-            new_events = uow.collect_new_events()
-            if new_events:
-                self.events_published.extend(new_events)
+    def handle(self, message: Message, uow: unit_of_work.AbstractUnitOfWork):
+        super().handle(message=message, uow=uow)
+        new_messages = uow.collect_new_events()
+        if new_messages:
+            self.events_published.extend(new_messages)
