@@ -34,13 +34,13 @@ class AbstractMessageBus:
 class MessageBus(AbstractMessageBus):
     EVENT_HANDLERS = {
         OutOfStock: [send_out_of_stock_notification],
-    }
+    }  # type: Dict[Type[Event], List[Callable]]
 
     COMMAND_HANDLERS = {
         Allocate: allocate,
         CreateBatch: add_batch,
         ChangeBatchQuantity: change_batch_quantity
-    }
+    }  # type: Dict[Type[Command], Callable]
 
     def handle(self, message: Message, uow: unit_of_work.AbstractUnitOfWork):
         results = []
