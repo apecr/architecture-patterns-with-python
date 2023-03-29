@@ -3,6 +3,7 @@ sqlalchemy==1.4.46
 flask
 psycopg2-binary
 tenacity
+redis
 
 # tests
 pytest

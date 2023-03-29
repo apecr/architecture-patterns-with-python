@@ -8,13 +8,13 @@ build:
 	docker-compose build
 
 up:
-	docker-compose up -d app
+	docker-compose up -d
 
 down:
 	docker-compose down --remove-orphans
 
 test: up
-	docker-compose run --rm --no-deps --entrypoint=pytest app /tests/unit /tests/integration /tests/e2e
+	docker-compose run --rm --no-deps --entrypoint=pytest api /tests/unit /tests/integration /tests/e2e
 
 
 coverage: up
@@ -22,16 +22,16 @@ coverage: up
 
 
 unit-tests:
-	docker-compose run --rm --no-deps --entrypoint=pytest app /tests/unit
+	docker-compose run --rm --no-deps --entrypoint=pytest api /tests/unit
 
 integration-tests: up
-	docker-compose run --rm --no-deps --entrypoint=pytest app /tests/integration
+	docker-compose run --rm --no-deps --entrypoint=pytest api /tests/integration
 
 e2e-tests: up
-	docker-compose run --rm --no-deps --entrypoint=pytest app /tests/e2e
+	docker-compose run --rm --no-deps --entrypoint=pytest api /tests/e2e
 
 logs:
-	docker-compose logs app | tail -100
+	docker-compose logs --tail=25 api redis_pubsub
 
 black:
 	black -l 86 $$(find * -name '*.py')

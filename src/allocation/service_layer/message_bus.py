@@ -4,9 +4,10 @@ from typing import List, Callable, Dict, Type, Union, Any
 from tenacity import Retrying, RetryError, stop_after_attempt, wait_exponential
 
 from allocation.domain.commands import Command, Allocate, ChangeBatchQuantity, CreateBatch
-from allocation.domain.events import Event, OutOfStock
+from allocation.domain.events import Event, OutOfStock, Allocated
 from allocation.service_layer import unit_of_work
-from allocation.service_layer.handlers import send_out_of_stock_notification, add_batch, allocate, change_batch_quantity
+from allocation.service_layer.handlers import send_out_of_stock_notification, add_batch, allocate, \
+    change_batch_quantity, publish_allocated_event
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +37,7 @@ class AbstractMessageBus:
 class MessageBus(AbstractMessageBus):
     EVENT_HANDLERS = {
         OutOfStock: [send_out_of_stock_notification],
+        Allocated: [publish_allocated_event]
     }  # type: Dict[Type[Event], List[Callable]]
 
     COMMAND_HANDLERS = {

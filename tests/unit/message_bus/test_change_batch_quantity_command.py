@@ -56,7 +56,7 @@ def test_reallocates_if_necessary_isolated(message_bus):
 
     fake_message_bus.handle(ChangeBatchQuantity("batch1", 25), uow)
 
-    [reallocation_event] = fake_message_bus.events_published
-    assert isinstance(reallocation_event, Allocate)
-    assert reallocation_event.orderid in {"order1", "order2"}
-    assert reallocation_event.sku == "INDIFFERENT-TABLE"
+    all_events = fake_message_bus.events_published
+    assert isinstance(all_events[-1], Allocate)
+    assert all_events[-1].orderid in {"order1", "order2"}
+    assert all_events[-1].sku == "INDIFFERENT-TABLE"

@@ -51,7 +51,7 @@ def test_raises_event_out_of_stock_if_cannot_allocate():
 
     product.allocate(OrderLine("order2", "SMALL-FORK", 1))
 
-    assert product.events[0] == events.OutOfStock(sku="SMALL-FORK")
+    assert product.events[-1] == events.OutOfStock(sku="SMALL-FORK")
 
 
 def test_increments_version_number():
@@ -93,3 +93,11 @@ def test_product_can_change_batch_quantity_and_deallocate_if_not_enough():
 
     assert batch.available_quantity == 4
     assert product.events[-1] == Allocate("order1", "SMALL-FORK", 6)
+
+
+def test_records_allocated_event_if_can_allocate():
+    batch = Batch("batch1", "SMALL-FORK", 10, eta=today)
+    product = Product(sku="SMALL-FORK", batches=[batch])
+    product.allocate(OrderLine("order1", "SMALL-FORK", 5))
+
+    assert product.events[-1] == events.Allocated(orderid="order1", sku="SMALL-FORK", qty=5, batchref=batch.reference)
