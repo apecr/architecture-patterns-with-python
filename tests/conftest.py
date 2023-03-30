@@ -1,6 +1,4 @@
 # pylint: disable=redefined-outer-name
-
-# pylint: disable=redefined-outer-name
 import shutil
 import subprocess
 import time

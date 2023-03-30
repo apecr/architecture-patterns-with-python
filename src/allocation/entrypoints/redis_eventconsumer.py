@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 
@@ -17,16 +18,22 @@ message_bus = MessageBus()
 def main():
     orm.start_mappers()
     pubsub = r.pubsub(ignore_subscribe_messages=True)
-    pubsub.subscribe("change_batch_quantity")
-
-    for m in pubsub.listen():
-        handle_change_batch_quantity(m)
+    pubsub.subscribe(allocate=handle_allocate_orderline, change_batch_quantity=handle_change_batch_quantity)
 
 
 def handle_change_batch_quantity(m):
-    logger.debug("handling %s", m)
     data = json.loads(m["data"])
+    logger.debug("log for handling change batch quantity %s", m)
+    print(f"print for handling change batch quantity {m}, {datetime.datetime.now()}")
     command = commands.ChangeBatchQuantity(ref=data["batchref"], qty=data["qty"])
+    message_bus.handle(command, uow=SqlAlchemyUnitOfWork())
+
+
+def handle_allocate_orderline(m):
+    logger.debug("log for handling allocate orderline %s", m)
+    print(f"print for handling allocate orderline {m}, {datetime.datetime.now()}")
+    data = json.loads(m["data"])
+    command = commands.Allocate(orderid=data["orderid"], qty=data["qty"], sku=data["sku"])
     message_bus.handle(command, uow=SqlAlchemyUnitOfWork())
 
 
