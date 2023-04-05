@@ -16,12 +16,18 @@ message_bus = MessageBus()
 
 
 def main():
+    print("Starting redis_pubsub image")
     orm.start_mappers()
+    print(config.get_redis_host_and_port())
     pubsub = r.pubsub(ignore_subscribe_messages=True)
-    pubsub.subscribe(allocate=handle_allocate_orderline, change_batch_quantity=handle_change_batch_quantity)
+    result = pubsub.subscribe(allocate=handle_allocate_orderline,
+                              change_batch_quantity=handle_change_batch_quantity)
+    print("End Starting redis_pubsub image")
+    print(result)
 
 
 def handle_change_batch_quantity(m):
+    print("hello handle_change_batch_quantity")
     data = json.loads(m["data"])
     logger.debug("log for handling change batch quantity %s", m)
     print(f"print for handling change batch quantity {m}, {datetime.datetime.now()}")
@@ -30,6 +36,7 @@ def handle_change_batch_quantity(m):
 
 
 def handle_allocate_orderline(m):
+    print("hello handle_allocate_orderline")
     logger.debug("log for handling allocate orderline %s", m)
     print(f"print for handling allocate orderline {m}, {datetime.datetime.now()}")
     data = json.loads(m["data"])

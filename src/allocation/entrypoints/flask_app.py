@@ -1,7 +1,8 @@
 from datetime import datetime
 
-from flask import Flask, request
+from flask import Flask, request, jsonify
 
+from allocation import views
 from allocation.adapters import orm
 from allocation.domain.commands import CreateBatch, Allocate
 from allocation.service_layer import handlers, unit_of_work
@@ -41,6 +42,15 @@ def allocate_endpoint():
         return {"message": str(oe)}, 500
 
     if batch_ref:
-        return {"batchref": batch_ref}, 201
+        return "OK", 202
     else:
         return {"message": f"Out of stock {request.json['sku']}"}, 400
+
+
+@app.route("/allocations/<order_id>", methods=["GET"])
+def allocations_view_endpoint(order_id):
+    uow = unit_of_work.SqlAlchemyUnitOfWork()
+    result = views.allocations(order_id, uow)
+    if not result:
+        return "not found", 404
+    return jsonify(result), 200

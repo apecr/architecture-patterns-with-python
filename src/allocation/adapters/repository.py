@@ -1,4 +1,5 @@
 import abc
+from typing import List
 
 from allocation.adapters import orm
 from allocation.domain import model
@@ -36,8 +37,15 @@ class AbstractRepository(abc.ABC):
     def _get(self, sku) -> model.Product:
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def for_order(self, orderid) -> List[model.Product]:
+        raise NotImplementedError
+
 
 class SqlAlchemyRepository(AbstractRepository):
+    def for_order(self, orderid) -> List[model.Product]:
+        return []
+
     def _get_by_batch_ref(self, batch_ref: str):
         return (
             self.session.query(model.Product)

@@ -13,6 +13,7 @@ from tenacity import retry, stop_after_delay
 
 from allocation import config
 from allocation.adapters.orm import metadata, start_mappers
+from allocation.service_layer.message_bus import MessageBus
 
 
 @pytest.fixture
@@ -87,3 +88,8 @@ def restart_redis_pubsub():
         ["docker-compose", "restart", "-t", "0", "redis_pubsub"],
         check=True,
     )
+
+
+@pytest.fixture
+def message_bus():
+    return MessageBus()

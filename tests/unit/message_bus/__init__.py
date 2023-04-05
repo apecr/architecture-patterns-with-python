@@ -1,5 +1,7 @@
+from typing import List
+
 from allocation.adapters import repository
-from allocation.domain import events
+from allocation.domain import events, model
 from allocation.domain.commands import CreateBatch, Allocate, ChangeBatchQuantity
 from allocation.domain.events import OutOfStock
 from allocation.service_layer import unit_of_work
@@ -8,6 +10,9 @@ from allocation.service_layer.message_bus import AbstractMessageBus, Message
 
 
 class FakeRepository(repository.AbstractRepository):
+    def for_order(self, orderid) -> List[model.Product]:
+        return []
+
     def __init__(self, products):
         self._products = set(products)
         self.seen = set()

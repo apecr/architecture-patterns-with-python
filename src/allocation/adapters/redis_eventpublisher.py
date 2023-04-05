@@ -13,4 +13,7 @@ logger = logging.getLogger(__name__)
 
 def publish(channel, event: Event):
     logger.debug("publishing: channel=%s, event=%s", channel, event)
+    print(f"publishing: channel={channel}")
+    print(f"event {event}")
     r.publish(channel, json.dumps(asdict(event)))
+

@@ -55,6 +55,8 @@ services:
       - "54321:5432"
 
   redis:
-    image: redis:alpine
+    image: redis:5.0.0
     ports:
       - "63791:6379"
+    environment:
+      DOCKER_DEFAULT_PLATFORM: linux/arm/v7
