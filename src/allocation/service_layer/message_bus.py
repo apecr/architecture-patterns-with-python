@@ -7,7 +7,7 @@ from allocation.domain.commands import Command, Allocate, ChangeBatchQuantity, C
 from allocation.domain.events import Event, OutOfStock, Allocated
 from allocation.service_layer import unit_of_work
 from allocation.service_layer.handlers import send_out_of_stock_notification, add_batch, allocate, \
-    change_batch_quantity, publish_allocated_event
+    change_batch_quantity, publish_allocated_event, add_allocation_to_read_model
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ class AbstractMessageBus:
 class MessageBus(AbstractMessageBus):
     EVENT_HANDLERS = {
         OutOfStock: [send_out_of_stock_notification],
-        Allocated: [publish_allocated_event]
+        Allocated: [publish_allocated_event, add_allocation_to_read_model]
     }  # type: Dict[Type[Event], List[Callable]]
 
     COMMAND_HANDLERS = {
