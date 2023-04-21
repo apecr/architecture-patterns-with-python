@@ -22,3 +22,15 @@ def test_allocations_view(session_factory, message_bus):
         {"sku": "sku1", "batchref": "sku1batch"},
         {"sku": "sku2", "batchref": "sku2batch"},
     ]
+
+
+def test_deallocation(session_factory, message_bus):
+    uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory)
+    message_bus.handle(commands.CreateBatch("b1", "sku1", 50, None), uow)
+    message_bus.handle(commands.CreateBatch("b2", "sku1", 50, today), uow)
+    message_bus.handle(commands.Allocate("o1", "sku1", 40), uow)
+    message_bus.handle(commands.ChangeBatchQuantity("b1", 10), uow)
+
+    assert views.allocations("o1", uow) == [
+        {"sku": "sku1", "batchref": "b2"},
+    ]

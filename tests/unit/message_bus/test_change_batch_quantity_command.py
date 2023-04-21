@@ -1,6 +1,7 @@
 from datetime import date
 
 from allocation.domain.commands import CreateBatch, ChangeBatchQuantity, Allocate
+from allocation.domain.events import Deallocated
 from tests.unit.message_bus import FakeUnitOfWork, FakeMessageBus
 
 
@@ -57,6 +58,6 @@ def test_reallocates_if_necessary_isolated(message_bus):
     fake_message_bus.handle(ChangeBatchQuantity("batch1", 25), uow)
 
     all_events = fake_message_bus.events_published
-    assert isinstance(all_events[-1], Allocate)
+    assert isinstance(all_events[-1], Deallocated)
     assert all_events[-1].orderid in {"order1", "order2"}
     assert all_events[-1].sku == "INDIFFERENT-TABLE"

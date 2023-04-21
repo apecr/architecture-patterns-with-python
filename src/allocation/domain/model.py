@@ -6,6 +6,7 @@ from typing import Optional, List, Set
 
 from allocation.domain import events
 from allocation.domain.commands import Allocate
+from allocation.domain.events import Deallocated
 
 
 class OutOfStock(Exception):
@@ -43,7 +44,7 @@ class Product:
         batch._purchased_quantity = qty
         while batch.available_quantity < 0:
             line = batch.deallocate_one()
-            self.events.append(Allocate(line.orderid, line.sku, line.qty))
+            self.events.append(Deallocated(line.orderid, line.sku, line.qty))
 
 
 @dataclass(unsafe_hash=True)

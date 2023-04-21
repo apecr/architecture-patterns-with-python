@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import asdict
+
 from allocation.adapters import email, redis_eventpublisher
 from allocation.domain import model, events
 from allocation.domain.commands import Allocate, CreateBatch, ChangeBatchQuantity
@@ -66,4 +68,29 @@ def add_allocation_to_read_model(event: Allocated, uow: unit_of_work.AbstractUni
             INSERT INTO allocations_view (orderid, sku, batchref)
             VALUES (:orderid, :sku, :batchref)""",
             dict(orderid=event.orderid, sku=event.sku, batchref=event.batchref))
+        uow.commit()
+
+
+def reallocate(
+        event: events.Deallocated,
+        uow: unit_of_work.AbstractUnitOfWork,
+):
+    with uow:
+        product = uow.products.get(sku=event.sku)
+        product.events.append(Allocate(**asdict(event)))
+        uow.commit()
+
+
+def remove_allocation_from_read_model(
+        event: events.Deallocated,
+        uow: unit_of_work.SqlAlchemyUnitOfWork,
+):
+    with uow:
+        uow.session.execute(
+            """
+            DELETE FROM allocations_view
+            WHERE orderid = :orderid AND sku = :sku
+            """,
+            dict(orderid=event.orderid, sku=event.sku),
+        )
         uow.commit()
