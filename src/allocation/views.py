@@ -1,3 +1,4 @@
+from allocation.adapters import redis_eventpublisher
 from allocation.domain import model
 from allocation.service_layer import unit_of_work
 
@@ -38,6 +39,14 @@ def orm_allocations(order_id: str, uow: unit_of_work.AbstractUnitOfWork):
             {"sku": b.sku, "batchref": b.batchref}
             for b in batches
         ]
+
+
+def redis_allocations(orderid: str):
+    batches = redis_eventpublisher.get_readmodel(orderid)
+    return [
+        {"batchref": b.decode(), "sku": s.decode()}
+        for s, b in batches.items()
+    ]
 
 
 def replica_view_allocations(order_id: str, uow: unit_of_work.SqlAlchemyUnitOfWork):

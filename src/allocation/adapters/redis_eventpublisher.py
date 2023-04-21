@@ -17,3 +17,10 @@ def publish(channel, event: Event):
     print(f"event {event}")
     r.publish(channel, json.dumps(asdict(event)))
 
+
+def update_readmodel(orderid, sku, batchref):
+    r.hset(orderid, sku, batchref)
+
+
+def get_readmodel(orderid):
+    return r.hgetall(orderid)

@@ -94,3 +94,11 @@ def remove_allocation_from_read_model(
             dict(orderid=event.orderid, sku=event.sku),
         )
         uow.commit()
+
+
+def add_allocation_to_redis_read_model(event: Allocated, _):
+    redis_eventpublisher.update_readmodel(event.orderid, event.sku, event.batchref)
+
+
+def remove_allocation_to_redis_from_read_model(event: events.Deallocated, _):
+    redis_eventpublisher.update_readmodel(event.orderid, event.sku, None)
